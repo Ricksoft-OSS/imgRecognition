@@ -1,0 +1,46 @@
+# Java
+*.class
+*.jar
+*.war
+*.ear
+
+# Eclipse
+.project
+.classpath
+.settings
+
+# Idea
+.idea
+*.iml
+*.iws
+*.ipr
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Gradle
+.gradle
+!gradle-wrapper.jar
+
+# Maven
+target
+
+# Build
+out
+build
+bin
+
+# Other
+*.log
+*.log.20*
+*.swp
+*.bak
+/alf_data_dev
+apiKey-visionAPI Bluemix.json
+
+# Project jar
+!imgRecognition*.amp
+
+# alfresco-global.properties
+alfresco-global.properties
