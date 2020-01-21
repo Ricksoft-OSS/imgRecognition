@@ -8,14 +8,14 @@ Alfresco Image Recognition is an add-on that recognize images by AI Services lik
 
 ### Build
 
-Run with `mvn clean install -DskipTests=true alfresco:run` or `./run.sh` and verify that it.
+Run with `mvn clean install -DskipTests=true alfresco:run` or `./run.sh build_start` and verify that it.
 
 
 ### Installation
 
-1. Download imgRecognition-platform-jar/target/imgRecognition-platform-jar-*.amp
-2. Put amp file to {alfresco_install_dir}/amps
-3. Stop Alfresco and install amp files. Please refer https://docs.alfresco.com/5.0/tasks/dev-extensions-tutorials-simple-module-install-amp.html for amp installation.
+1. Download `imgRecognition/target/img-recognition-x.y.z.jar`
+2. Put jar file to `{alfresco_install_dir}/modules/platform`
+3. Stop Alfresco and install jar files. Please refer https://docs.alfresco.com/6.2/concepts/dev-extensions-packaging-techniques-jar-files.html for jar installation.
 4. Please check following Configuration section and start Alfresco.
 
 ### Configuration
@@ -23,19 +23,20 @@ Run with `mvn clean install -DskipTests=true alfresco:run` or `./run.sh` and ver
 Before using this add-on, please add parameters in your alfresco-global.properties.
 You will need IBM Watson Visual Recognition API Key or AWS Rekognition API Key.
 
-Note: IBM Watson Visual Recognition is used as default. If you want to use AWS service, please change imgRecognitionAction bean
-in imgRecognition-platform-jar/src/main/resources/alfresco/module/imgRecognition-platform-jar/context/service-context.xml.
+Note: IBM Watson Visual Recognition is used as default. If you want to use AWS service, please change `recognition.service.type` property value to `aws`.
 
 
 |Setting contents|Property key|Default|
 |--------|--------------|------------|
+|Default Recognition Service (`ibm` or `aws`) |recognition.service.type|ibm|
 |AWS Access Key |aws.accessKey|None|
 |AWS Secret Key |aws.secretKey|None|
 |Max Number of Label (tags) for AWS Recognition |aws.maxNumberOfLabels|5|
 |AWS Confident threshold |aws.confidentLevel|90.0F|
-|IBM Watson Version |bluemix.version|None|
 |IBM Watson Api Key |bluemix.apikey|None|
+|IBM Watson Version |bluemix.version|2020-01-01|
 |IBM Watson Confident threshold |bluemix.confidentLevel|0.55|
+|IBM Watson Custom Model ID |bluemix.custom.model.id|None|
 
 
 ### Contribution
