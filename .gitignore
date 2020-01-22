@@ -42,5 +42,3 @@ apiKey-visionAPI Bluemix.json
 # Project jar
 !imgRecognition*.amp
 
-# alfresco-global.properties
-alfresco-global.properties
