@@ -42,6 +42,16 @@
 		<property name="confidentLevel" value="${bluemix.confidentLevel}" />
 		<property name="customModelId" value="${bluemix.custom.model.id}" />
 	</bean>
+
+	<bean id="azureComputerVisionApiService"
+		  class="jp.ricksoft.alfresco.image.recognition.AzureImageRecognitionServices" init-method="initialize">
+
+		<property name="taggingService" ref="taggingService" />
+		<property name="contentService" ref="ContentService" />
+		<property name="nodeService" ref="nodeService" />
+		<property name="subscriptionKey" value="${azure.computer.vision.subscription.key}" />
+		<property name="endpoint" value="${azure.computer.vision.endpoint}" />
+	</bean>
 	
 	<bean id="imgRecognitionActionResource" class="org.alfresco.i18n.ResourceBundleBootstrapComponent">
 		<property name="resourceBundles">
