@@ -22,26 +22,25 @@ import org.alfresco.service.cmr.repository.NodeService;
 import org.alfresco.service.cmr.tagging.TaggingService;
 import org.apache.log4j.Logger;
 
-import com.ibm.watson.developer_cloud.service.security.IamOptions;
-import com.ibm.watson.developer_cloud.visual_recognition.v3.VisualRecognition;
-import com.ibm.watson.developer_cloud.visual_recognition.v3.model.ClassResult;
-import com.ibm.watson.developer_cloud.visual_recognition.v3.model.ClassifiedImages;
-import com.ibm.watson.developer_cloud.visual_recognition.v3.model.ClassifyOptions;
-
+import com.ibm.cloud.sdk.core.security.IamAuthenticator;
+import com.ibm.watson.visual_recognition.v3.VisualRecognition;
+import com.ibm.watson.visual_recognition.v3.model.ClassifyOptions;
+import com.ibm.watson.visual_recognition.v3.model.ClassifiedImages;
+import com.ibm.watson.visual_recognition.v3.model.ClassResult;
 
 public class BluemixImageRecognitionServices implements ImageRecognitionServices {
 
 	private TaggingService		taggingService;
 	private ContentService		contentService;
 	private NodeService			nodeService;
-	
+
 	private VisualRecognition 	ibmVisualRecognitionService;
 
 	private String 				apiKey;
 	private String				version;
 	private float				confidentLevel;
 	private String              customModelId;
-	
+
 	private static Logger		logger = Logger.getLogger(BluemixImageRecognitionServices.class);
 
 	/* setter for spring bean properties */
@@ -74,13 +73,11 @@ public class BluemixImageRecognitionServices implements ImageRecognitionServices
 	}
 
 	// This is necessary to initialize after this bean is created.
-    public void initialize() {
-		IamOptions options = new IamOptions.Builder()
-			    .apiKey(this.apiKey)
-			    .build();
-		this.ibmVisualRecognitionService = new VisualRecognition(version, options);
-    }
-	
+	public void initialize() {
+		IamAuthenticator authenticator = new IamAuthenticator(apiKey);
+		this.ibmVisualRecognitionService = new VisualRecognition(version, authenticator);
+	}
+
 	@Override
 	public List<String> recognizeImageAndGetTagList(NodeRef nodeRef){
 
@@ -92,27 +89,27 @@ public class BluemixImageRecognitionServices implements ImageRecognitionServices
 			throw new ContentIOException("InputStream for content is null!");
 		}
 
-		
+
 		List<String> tags = new ArrayList<String>();
 		File tmpFile = null;
 		try {
-			// File type gives to Bluemix is jpeg format only 
+			// File type gives to Bluemix is jpeg format only
 			tmpFile = File.createTempFile("vision-"+fileName, ".jpg");
 			tmpFile.deleteOnExit();
 			Files.copy(in, tmpFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 			ClassifyOptions classifyOptions = new ClassifyOptions.Builder()
-					  .acceptLanguage("ja")
-					  .threshold(confidentLevel)
-					  .imagesFile(tmpFile)
-					  .classifierIds(Arrays.asList(customModelId))
-					  .build();
-			ClassifiedImages returnClassify = ibmVisualRecognitionService.classify(classifyOptions).execute();
+					.acceptLanguage("ja")
+					.threshold(confidentLevel)
+					.imagesFile(tmpFile)
+					.classifierIds(Arrays.asList(customModelId))
+					.build();
+			ClassifiedImages returnClassify = ibmVisualRecognitionService.classify(classifyOptions).execute().getResult();
 			// Always passing only one image to watson. then below get first image (0).
 			List<ClassResult> classifiers = returnClassify.getImages().get(0).getClassifiers().get(0).getClasses();
 			for(ClassResult cls: classifiers){
-				tags.add(cls.getClassName());
+				tags.add(cls.getXClass());
 			}
-			
+
 		} catch (IOException ex) {
 			logger.error("IOException occured while creating temp file for BluemixImageRecognition !" + ex.getMessage());
 			ex.printStackTrace();
@@ -136,14 +133,14 @@ public class BluemixImageRecognitionServices implements ImageRecognitionServices
 				}
 			}
 		}
-		
+
 		// Remove empty tag in case.
 		for(int i=0; i< tags.size(); i++){
 			if(tags.get(i).isEmpty()){
 				tags.remove(i);
 			}
 		}
-		
+
 		return tags;
 	}
 

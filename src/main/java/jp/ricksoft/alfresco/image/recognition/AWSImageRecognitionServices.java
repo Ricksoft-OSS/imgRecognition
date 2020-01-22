@@ -15,21 +15,19 @@ import org.alfresco.service.cmr.repository.ContentService;
 import org.alfresco.service.cmr.repository.NodeRef;
 import org.alfresco.service.cmr.tagging.TaggingService;
 
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.rekognition.AmazonRekognition;
-import com.amazonaws.services.rekognition.AmazonRekognitionClientBuilder;
-import com.amazonaws.services.rekognition.model.AmazonRekognitionException;
-import com.amazonaws.services.rekognition.model.DetectLabelsRequest;
-import com.amazonaws.services.rekognition.model.DetectLabelsResult;
-import com.amazonaws.services.rekognition.model.Image;
-import com.amazonaws.services.rekognition.model.Label;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.core.SdkBytes;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.rekognition.RekognitionClient;
+import software.amazon.awssdk.services.rekognition.model.RekognitionException;
+import software.amazon.awssdk.services.rekognition.model.DetectLabelsRequest;
+import software.amazon.awssdk.services.rekognition.model.DetectLabelsResponse;
+import software.amazon.awssdk.services.rekognition.model.Image;
+import software.amazon.awssdk.services.rekognition.model.Label;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
-import org.apache.commons.lang3.StringUtils;
 
 import java.nio.ByteBuffer;
 
@@ -38,7 +36,7 @@ public class AWSImageRecognitionServices implements ImageRecognitionServices{
 	private TaggingService		taggingService;
 	private ContentService		contentService;
 
-	private AmazonRekognition	client;
+	private RekognitionClient	client;
 	private String				accessKey;
 	private String				secretKey;
 	private int					maxNumberOfLabels;
@@ -77,12 +75,11 @@ public class AWSImageRecognitionServices implements ImageRecognitionServices{
 
 	// This is necessary to initialize after this bean is created.
     public void initialize() {
-		AWSCredentials credentials = new BasicAWSCredentials(this.accessKey, this.secretKey);
-		
-		this.client = AmazonRekognitionClientBuilder
-				.standard()
-				.withRegion(Regions.US_WEST_2)
-				.withCredentials(new AWSStaticCredentialsProvider(credentials))
+		StaticCredentialsProvider credentials = StaticCredentialsProvider.create(AwsBasicCredentials.create(this.accessKey, this.secretKey));
+
+		this.client = RekognitionClient.builder()
+				.credentialsProvider(credentials)
+				.region(Region.US_WEST_2)
 				.build();
 		
 		logger.info("AWS Credential Initialized");
@@ -102,16 +99,16 @@ public class AWSImageRecognitionServices implements ImageRecognitionServices{
 		ContentReader contentReader = contentService.getReader(nodeRef, ContentModel.PROP_CONTENT);
 		DetectLabelsRequest request = sendDetectLablesRequest(contentReader.getContentInputStream());
 	      
-	    List<String> tags = new ArrayList<String>();
+	    List<String> tags = new ArrayList<>();
 	    try {
-	         DetectLabelsResult result = client.detectLabels(request);
-	         List <Label> labels = result.getLabels();
+	         DetectLabelsResponse result = client.detectLabels(request);
+	         List <Label> labels = result.labels();
 	         
 	         for (Label label: labels) {
-	        	logger.info("Getting Tag : "+label.getName() + " with confidence :" + label.getConfidence());
-	            tags.add(label.getName());
+	        	logger.info("Getting Tag : "+label.name() + " with confidence :" + label.confidence());
+	            tags.add(label.name());
 	         }
-	      } catch(AmazonRekognitionException e) {
+	      } catch(RekognitionException e) {
 	         e.printStackTrace();
 	      }
 	      
@@ -123,10 +120,11 @@ public class AWSImageRecognitionServices implements ImageRecognitionServices{
 
 		DetectLabelsRequest request = null;
 		try{
-		    request = new DetectLabelsRequest();
-		    request.setImage(new Image().withBytes(ByteBuffer.wrap(IOUtils.toByteArray(inputStream))));
-		    request.withMaxLabels(maxNumberOfLabels);
-		    request.withMinConfidence(confidentLevel);
+			request = DetectLabelsRequest.builder()
+					.image(Image.builder().bytes(SdkBytes.fromByteBuffer(ByteBuffer.wrap(IOUtils.toByteArray(inputStream)))).build())
+					.maxLabels(maxNumberOfLabels)
+					.minConfidence(confidentLevel)
+					.build();
 
 		} catch(IOException ex){
 			logger.error("Error while requesting recognition to AWS.");
