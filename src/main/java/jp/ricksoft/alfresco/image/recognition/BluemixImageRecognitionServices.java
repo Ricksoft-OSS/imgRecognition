@@ -74,8 +74,6 @@ public class BluemixImageRecognitionServices implements ImageRecognitionServices
 
 	// This is necessary to initialize after this bean is created.
 	public void initialize() {
-
-		// コピペ
 		IamAuthenticator authenticator = new IamAuthenticator(apiKey);
 		this.ibmVisualRecognitionService = new VisualRecognition(version, authenticator);
 	}
