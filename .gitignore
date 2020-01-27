@@ -39,6 +39,9 @@ bin
 /alf_data_dev
 apiKey-visionAPI Bluemix.json
 
+# License
+*.lic
+
 # Project jar
 !imgRecognition*.amp
 
