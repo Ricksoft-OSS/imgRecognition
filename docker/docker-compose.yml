@@ -22,6 +22,15 @@ services:
       - img-recognition-acs-volume:/usr/local/tomcat/alf_data
     depends_on:
       - img-recognition-postgres
+  img-recognition-share:
+    image: alfresco/alfresco-share:${alfresco.share.version}
+    environment:
+      CATALINA_OPTS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:8888"
+      REPO_HOST: img-recognition-acs
+      REPO_PORT: 8080
+    ports:
+      - "${share.port}:8080"
+      - "${share.debug.port}:8888"
   img-recognition-postgres:
     image: postgres:11.6
     environment:
